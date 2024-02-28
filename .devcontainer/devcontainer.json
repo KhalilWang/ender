@@ -1,0 +1,17 @@
+{
+    "name": "EnderDeploy",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "devcontainer",
+    "workspaceFolder": "/ws/${localWorkspaceFolderBasename}",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "streetsidesoftware.code-spell-checker",
+                "GitHub.copilot",
+                "mads-hartmann.bash-ide-vscode"
+            ]
+        }
+    },
+    "postStartCommand": "sh .devcontainer/poststart.sh"
+}
