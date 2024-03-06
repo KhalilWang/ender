@@ -1,29 +1,27 @@
 ---
-- name: Copy config files to home directory and start docker-compose
-  hosts: localhost
+- name: all in one deploy
+  hosts: all
   gather_facts: no
+
   tasks:
-    - name: Copy config files to home directory
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: "~/{{ item | basename }}"
-      with_fileglob:
-        - "./config/*"
-      become: yes
+    - name: Copy all files from ./config directory to the home directory
+      copy:
+        src: "./config/"
+        dest: "~/"
+        remote_src: yes
 
     - name: Check if docker-compose is installed
-      ansible.builtin.command: "docker-compose --version"
-      register: docker_compose_version
-      ignore_errors: yes
+      command: which docker-compose
+      register: docker_compose_installed
+      failed_when: false
       changed_when: false
 
     - name: Install docker-compose if not installed
-      ansible.builtin.command: "curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
-      when: docker_compose_version.rc != 0
+      command: "curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+      when: docker_compose_installed.rc != 0
       become: yes
 
-    - name: Start docker-compose
-      ansible.builtin.shell:
-        cmd: "docker-compose up -d"
+    - name: Execute docker-compose up -d
+      command: docker-compose up -d
+      args:
         chdir: "~/"
-      become: yes
