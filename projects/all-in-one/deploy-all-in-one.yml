@@ -1,5 +1,6 @@
+---
 - name: Copy config files to home directory and start docker-compose
-  hosts: all
+  hosts: localhost
   gather_facts: no
   tasks:
     - name: Copy config files to home directory
@@ -11,7 +12,7 @@
       become: yes
 
     - name: Start docker-compose
-      ansible.builtin.command: "docker-compose up -d"
-      args:
+      ansible.builtin.shell:
+        cmd: "docker-compose up -d"
         chdir: "~/"
       become: yes
