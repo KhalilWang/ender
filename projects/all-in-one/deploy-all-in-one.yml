@@ -1,4 +1,5 @@
 - name: Copy config files to home directory and start docker-compose
+  hosts: all
   gather_facts: no
   tasks:
     - name: Copy config files to home directory
