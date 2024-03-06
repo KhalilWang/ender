@@ -11,6 +11,17 @@
         - "./config/*"
       become: yes
 
+    - name: Check if docker-compose is installed
+      ansible.builtin.command: "docker-compose --version"
+      register: docker_compose_version
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install docker-compose if not installed
+      ansible.builtin.command: "curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+      when: docker_compose_version.rc != 0
+      become: yes
+
     - name: Start docker-compose
       ansible.builtin.shell:
         cmd: "docker-compose up -d"
