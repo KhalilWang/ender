@@ -1,0 +1,200 @@
+version: '3.8'
+x-postgres-common: &postgres-common
+  image: postgres:alpine3.18
+  user: postgres
+  restart: always
+  healthcheck:
+    test: 'pg_isready -U postgres --dbname=postgres'
+    interval: 10s
+    timeout: 5s
+    retries: 5
+services:
+  postgres_primary:
+    <<: *postgres-common
+    user: root
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256
+
+        host replication all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command: |
+      postgres 
+      -c wal_level=replica 
+      -c hot_standby=on 
+      -c max_wal_senders=10 
+      -c max_replication_slots=10 
+      -c hot_standby_feedback=on
+    volumes:
+      - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+      - ./tmp/.postgres-data/master:/var/lib/postgresql/data:z
+  postgres_replica:
+    <<: *postgres-common
+    ports:
+      - 5433:5432
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: replicator_password
+    command: |
+      bash -c "
+      rm -rf /var/lib/postgresql/data
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      "
+    depends_on:
+      postgres_primary:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    restart: always
+  center_1:
+    image: boyzwj1984/m1x-runner:1.4
+    ports:
+      - 4000:4000
+      - 20001:20001
+      - 20002:20002
+    environment:
+      MIX_ENV: $MIX_ENV
+      RELEASE_NODE: center_1
+      RELEASE_COOKIE: $RELEASE_COOKIE
+      PHX_SERVER: $PHX_SERVER
+      CDN_URL: $CDN_URL
+      AUTHWAYS: $AUTHWAYS
+      PLATFORM_PUBLIC_KEY: $PLATFORM_PUBLIC_KEY
+      CI_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+      CI_PIPELINE_ID: $CI_PIPELINE_ID
+      CONFIRM_DROP_DB_PW: $CONFIRM_DROP_DB_PW
+      REDIS_URL: $REDIS_URL
+    volumes:
+      - ./data/center_1:/data
+      - ./logs/center_1:/logs
+      - ./logs/:/all_logs
+      - ./m1x:/opt/app
+    depends_on:
+      - postgres_primary
+      - postgres_replica
+    command: sh -c 'bin/m1x eval M1x.Release.create_and_migrate;bin/m1x start;'
+
+  role_1:
+    image: boyzwj1984/m1x-runner:1.4
+    environment:
+      MIX_ENV: $MIX_ENV
+      RELEASE_NODE: role_1
+      RELEASE_COOKIE: $RELEASE_COOKIE
+      REDIS_URL: $REDIS_URL
+      ANTI_CHEAT_SECRETE_KEY: $ANTI_CHEAT_SECRETE_KEY
+      ANTI_CHEAT_SECRETE_ID: $ANTI_CHEAT_SECRETE_ID
+      GATEWAY_ID: 1
+    volumes:
+      - ./data/role_1:/data
+      - ./logs/role_1:/logs
+      - ./m1x:/opt/app
+    depends_on:
+      - center_1
+    command: sh -c 'bin/m1x start;'
+
+  role_2:
+    image: boyzwj1984/m1x-runner:1.4
+    environment:
+      MIX_ENV: $MIX_ENV
+      RELEASE_NODE: role_2
+      RELEASE_COOKIE: $RELEASE_COOKIE
+      REDIS_URL: $REDIS_URL
+      ANTI_CHEAT_SECRETE_KEY: $ANTI_CHEAT_SECRETE_KEY
+      ANTI_CHEAT_SECRETE_ID: $ANTI_CHEAT_SECRETE_ID
+      GATEWAY_ID: 1
+    volumes:
+      - ./data/role_2:/data
+      - ./logs/role_2:/logs
+      - ./m1x:/opt/app
+    depends_on:
+      - center_1
+    command: sh -c 'bin/m1x start;'
+
+  gateway:
+    image: boyzwj1984/m1x-runner:1.4
+    ports:
+      - 4001:4001
+    environment:
+      MIX_ENV: $MIX_ENV
+      RELEASE_NODE: gateway_1
+      RELEASE_COOKIE: $RELEASE_COOKIE
+      REDIS_URL: $REDIS_URL
+    volumes:
+      - ./data/gateway:/data
+      - ./logs/gateway:/logs
+      - ./m1x:/opt/app
+    command: sh -c 'bin/m1x start;'
+
+  dsa:
+    image: boyzwj1984/dsa-main:latest
+    restart: unless-stopped
+    environment:
+      DC_HOST: center_1
+      DC_PORT: 20001
+      # DS_PROVIDER: http://192.168.15.10/ds_provider
+      # DS_PROVIDER_TAG: ${DS_PROVIDER_TAG}
+      DSA_ZONE: local
+      DSA_HOST: ${DSA_HOST}
+    volumes:
+      - ./tmp/ds:/opt/app/ds
+      - ./tmp/ds_logs:/opt/app/logs
+    ports:
+      - "30000-30199:30000-30199/udp"
+      - "39999:39999/udp"      
+    depends_on:
+      - center_1
+  
+  # prom:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.prom
+  #   restart: always
+  #   volumes: 
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--web.enable-lifecycle'
+  #   ports:
+  #     - 9090:9090
+      
+  # loki:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.loki
+  #   restart: always
+  #   ports:
+  #     - "3100:3100"
+  #   # volumes: 
+  #   #   - ../tmp/loki:/etc/loki
+  #   command: -config.file=/etc/loki/loki-local-config.yaml
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   user: "0"
+  #   restart: always
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - ../tmp/grafana:/var/lib/grafana
+  #   command: |
+  #     bash -c "
+  #     grafana-cli plugins install grafana-piechart-panel
+  #     grafana-cli plugins install grafana-worldmap-panel
+  #     grafana-cli plugins install grafana-clock-panel
+  #     grafana-cli plugins install grafana-simple-json-datasource
+  #     grafana-cli plugins install grafana-polyst
+  #     grafana-cli admin reset-admin-password admin
+  #     "
+  #   depends_on:
+  #     - prom

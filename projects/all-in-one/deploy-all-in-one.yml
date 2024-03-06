@@ -1,0 +1,16 @@
+- name: Copy config files to home directory and start docker-compose
+  gather_facts: no
+  tasks:
+    - name: Copy config files to home directory
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "~/{{ item | basename }}"
+      with_fileglob:
+        - "./config/*"
+      become: yes
+
+    - name: Start docker-compose
+      ansible.builtin.command: "docker-compose up -d"
+      args:
+        chdir: "~/"
+      become: yes
