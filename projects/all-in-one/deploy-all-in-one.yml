@@ -1,24 +1,46 @@
 ---
-- name: all in one deploy
+- name: Deploy and execute tasks on remote hosts
   hosts: all
-  gather_facts: no
+  become: true
 
   tasks:
-    - name: Copy all files from ./config directory to the home directory
+    - name: Copy all files from local ./config directory to the remote home directory
       copy:
         src: "./config/"
         dest: "~/"
-        remote_src: yes
+        mode: preserve
 
-    - name: Check if docker-compose is installed
-      command: which docker-compose
-      register: docker_compose_installed
-      failed_when: false
-      changed_when: false
+    - name: Download m1x project
+      command: gsutil cp gs://matr1x-fire-server-pkg/m1x-awx-deploy.tar.gz ./m1x.tar.gz 
+      args:
+        chdir: "~/"
 
-    - name: Install docker-compose if not installed
-      command: "curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
-      when: docker_compose_installed.rc != 0
+    - name: Create m1x directory if not exist
+      ansible.builtin.file:
+        path: "~/m1x"
+        state: directory
+
+    - name: Remove existing files in m1x directory
+      ansible.builtin.file:
+        path: "~/m1x/*"
+        state: absent
+
+    - name: Unpack m1x.tar.gz
+      ansible.builtin.shell:
+        cmd: "tar -xz -f ~/m1x.tar.gz -C ~/m1x"
+
+    - name: Download Docker Compose
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64"
+        dest: "/usr/local/bin/docker-compose"
+        mode: '0755'
+        force: true
+        validate_certs: true
+
+    - name: Log in to Docker Hub
+      ansible.builtin.docker_login:
+        username: khalilwang
+        password: asdqwe!234
       become: yes
 
     - name: Execute docker-compose up -d

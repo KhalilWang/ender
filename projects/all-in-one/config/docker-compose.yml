@@ -71,8 +71,8 @@ services:
       CDN_URL: $CDN_URL
       AUTHWAYS: $AUTHWAYS
       PLATFORM_PUBLIC_KEY: $PLATFORM_PUBLIC_KEY
-      CI_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-      CI_PIPELINE_ID: $CI_PIPELINE_ID
+      # CI_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+      # CI_PIPELINE_ID: $CI_PIPELINE_ID
       CONFIRM_DROP_DB_PW: $CONFIRM_DROP_DB_PW
       REDIS_URL: $REDIS_URL
     volumes:
@@ -136,24 +136,24 @@ services:
       - ./m1x:/opt/app
     command: sh -c 'bin/m1x start;'
 
-  dsa:
-    image: boyzwj1984/dsa-main:latest
-    restart: unless-stopped
-    environment:
-      DC_HOST: center_1
-      DC_PORT: 20001
-      # DS_PROVIDER: http://192.168.15.10/ds_provider
-      # DS_PROVIDER_TAG: ${DS_PROVIDER_TAG}
-      DSA_ZONE: local
-      DSA_HOST: ${DSA_HOST}
-    volumes:
-      - ./tmp/ds:/opt/app/ds
-      - ./tmp/ds_logs:/opt/app/logs
-    ports:
-      - "30000-30199:30000-30199/udp"
-      - "39999:39999/udp"      
-    depends_on:
-      - center_1
+  # dsa:
+  #   image: boyzwj1984/dsa-main:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     DC_HOST: center_1
+  #     DC_PORT: 20001
+  #     # DS_PROVIDER: http://192.168.15.10/ds_provider
+  #     # DS_PROVIDER_TAG: ${DS_PROVIDER_TAG}
+  #     DSA_ZONE: local
+  #     DSA_HOST: ${DSA_HOST}
+  #   volumes:
+  #     - ./tmp/ds:/opt/app/ds
+  #     - ./tmp/ds_logs:/opt/app/logs
+  #   ports:
+  #     - "30000-30199:30000-30199/udp"
+  #     - "39999:39999/udp"      
+  #   depends_on:
+  #     - center_1
   
   # prom:
   #   build:
