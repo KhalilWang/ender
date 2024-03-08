@@ -2,6 +2,8 @@
 - name: Deploy and execute tasks on remote hosts
   hosts: all
   become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
 
   tasks:
     - name: Copy all files from local ./config directory to the remote home directory
@@ -36,6 +38,17 @@
         mode: '0755'
         force: true
         validate_certs: true
+
+    - name: Install pip
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Python setuptools
+      ansible.builtin.pip:
+        name: setuptools
+        state: present
+        executable: pip3
 
     - name: Install Docker SDK for Python
       ansible.builtin.pip:
