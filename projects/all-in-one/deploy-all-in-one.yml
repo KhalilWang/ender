@@ -37,6 +37,11 @@
         force: true
         validate_certs: true
 
+    - name: Install Docker SDK for Python
+      ansible.builtin.pip:
+        name: docker
+        state: present
+
     - name: Log in to Docker Hub
       ansible.builtin.docker_login:
         username: khalilwang
