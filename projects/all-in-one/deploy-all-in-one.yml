@@ -38,12 +38,30 @@
         mode: '0755'
         force: true
         validate_certs: true
-        
+    
+    - name: Install docker.io for Debian/Ubuntu
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Install pip3 for Debian/Ubuntu
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: install Docker SDK for Python
+      ansible.builtin.pip:
+        name: docker
+        executable: pip3
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
     - name: Log in to Docker Hub
       ansible.builtin.docker_login:
         username: khalilwang
         password: asdqwe!234
-      become: yes
 
     - name: Execute docker-compose up -d
       command: docker-compose up -d
