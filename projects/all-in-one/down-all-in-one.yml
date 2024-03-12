@@ -1,0 +1,12 @@
+---
+- name: Down all-in-one
+  hosts: all
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    - name: Execute docker-compose down
+      command: docker-compose down
+      args:
+        chdir: "~/"
