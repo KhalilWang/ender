@@ -50,7 +50,7 @@
         --service-account={{ GOOGLE_SERVICE_ACCOUNT }}
         --scopes=https://www.googleapis.com/auth/cloud-platform
         --min-cpu-platform=Automatic
-        --tags={{ item.item.item.host_name.split('-')[1] }},http-server,https-server
+        --tags={{ item.item.host_name.split('-')[1] }},http-server,https-server
         --no-shielded-secure-boot
         --shielded-vtpm
         --shielded-integrity-monitoring
