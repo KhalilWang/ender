@@ -1,0 +1,90 @@
+---
+# google.cloud 的 Ansible 模块不支持用机器映像创建实例，被弃用了
+
+- name: Create multiple DS VMs on Google Cloud
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - dev_env.yml
+    - vm_instances.yml
+  vars:
+    project_id: "{{ PROJECT_ID }}"
+    google_service_account: "{{ GOOGLE_SERVICE_ACCOUNT }}"
+    service_account_file: "/path/to/your/service-account-file.json"
+
+  tasks:
+    - name: Create IP addresses for each host
+      google.cloud.gcp_compute_address:
+        name: "ip-{{ item.host_name }}"
+        region: "{{ item.zone | regex_replace('(.+)-.+$', '\\1') }}"
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      loop: "{{ vm_instances }}"
+      register: ip_creation_results
+
+    - name: Get the static IP addresses
+      google.cloud.gcp_compute_address_info:
+        region: "{{ item.zone | regex_replace('(.+)-.+$', '\\1') }}"
+        project: "{{ project_id }}"
+        filters:
+          - "name = ip-{{ item.host_name }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+      loop: "{{ vm_instances }}"
+      register: ip_info_results
+
+    - name: Debug IP address info results
+      debug:
+        var: ip_info_results
+
+    - name: Create a list of the static IP addresses
+      set_fact:
+        static_ips: "{{ ip_info_results.results | map(attribute='resources') | map('first') | map(attribute='address') | list }}"
+
+    - name: Create a network
+      google.cloud.gcp_compute_network:
+        name: network-instance
+        auto_create_subnetworks: 'true'
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: network
+
+    - name: Create Google Cloud VM instances using the static IPs
+      google.cloud.gcp_compute_instance:
+        name: "{{ item.0.host_name }}"
+        zone: "{{ item.0.zone }}"
+        project: "{{ project_id }}"
+        machine_type: "e2-custom-8-16384"
+        network_interfaces:
+          - network: "{{ network }}"
+            access_configs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+              nat_ip: "{ 'address' : '{{ item.1 }}', 'addressType': 'EXTERNAL' }"
+        tags:
+          items:
+            - "{{ item.0.host_name | split('-') | first }}"
+            - http-server
+            - https-server
+        # service_account_email: "{{ google_service_account }}"
+        scopes:
+          - "https://www.googleapis.com/auth/cloud-platform"
+        metadata:
+          startup-script: |
+            #! /bin/bash
+            cd /home/tom
+            sudo sh create_env.sh
+            sudo docker-compose up -d
+        disks:
+          - auto_delete: true
+            initialize_params:
+            # 这里并不是我们想要的机器映像
+              source_image: "projects/{{ project_id }}/global/images/dsa-template"
+        state: present
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+      loop: "{{ vm_instances | zip(static_ips) | list }}"

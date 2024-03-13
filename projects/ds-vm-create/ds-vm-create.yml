@@ -1,0 +1,69 @@
+---
+- name: Create Google Cloud VM
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - dev_env.yml
+    - vm_instances.yml
+
+  tasks:
+    - name: Activate service account
+      ansible.builtin.command: gcloud auth activate-service-account --key-file=/path/to/your/service-account-file.json
+
+    - name: List service account
+      ansible.builtin.command: gcloud auth list
+      register: gcloud_auth_list
+
+    # - debug:
+    #     var: gcloud_auth_list
+
+    - name: Create static IP addresses
+      ansible.builtin.command: >
+        gcloud compute addresses create ip-{{ item.host_name }}
+        --project={{ PROJECT_ID }}
+        --region={{ item.zone | regex_replace("-[^-]*$","") }}
+      with_items: "{{ vm_instances }}"
+      register: static_ip_results
+
+    - name: Get static IP addresses
+      ansible.builtin.command: >
+        gcloud compute addresses describe ip-{{ item.item.host_name }}
+        --project={{ PROJECT_ID }}
+        --region={{ item.item.zone | regex_replace("-[^-]*$","")}}
+        --format="get(address)"
+      with_items: "{{ static_ip_results.results }}"
+      register: static_ip_addresses
+      changed_when: false
+
+    # - debug:
+    #     var: static_ip_addresses
+
+    - name: Create VM instances
+      ansible.builtin.command: >
+        gcloud compute instances create {{ item.item.item.host_name }}
+        --project={{ PROJECT_ID }}
+        --zone={{ item.item.item.zone }}
+        --machine-type=e2-custom-8-16384
+        --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default,address={{ item.stdout }}
+        --maintenance-policy=MIGRATE
+        --provisioning-model=STANDARD
+        --service-account={{ GOOGLE_SERVICE_ACCOUNT }}
+        --scopes=https://www.googleapis.com/auth/cloud-platform
+        --min-cpu-platform=Automatic
+        --tags={{ item.item.item.host_name.split('-')[1] }},http-server,https-server
+        --no-shielded-secure-boot
+        --shielded-vtpm
+        --shielded-integrity-monitoring
+        --labels=goog-ec-src=vm_add-gcloud
+        --reservation-affinity=any
+        --source-machine-image=dsa-template
+        --metadata startup-script='#! /bin/bash
+cd /home/tom
+sudo sh create_env.sh
+sudo docker-compose up -d'
+      with_items: "{{ static_ip_addresses.results }}"
+      register: instance_creation_results
+
+    - debug:
+        var: instance_creation_results
+

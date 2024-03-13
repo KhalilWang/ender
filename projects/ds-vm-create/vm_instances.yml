@@ -1,0 +1,5 @@
+vm_instances:
+  - host_name: "dev-dsa-01"
+    zone: "asia-southeast1-b"
+  - host_name: "dev-dsa-02"
+    zone: "asia-east1-b"
