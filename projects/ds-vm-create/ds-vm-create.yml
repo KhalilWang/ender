@@ -40,9 +40,9 @@
 
     - name: Create VM instances
       ansible.builtin.command: >
-        gcloud compute instances create {{ item.item.item.host_name }}
+        gcloud compute instances create {{ item.item.host_name }}
         --project={{ PROJECT_ID }}
-        --zone={{ item.item.item.zone }}
+        --zone={{ item.item.zone }}
         --machine-type=e2-custom-8-16384
         --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default,address={{ item.stdout }}
         --maintenance-policy=MIGRATE
