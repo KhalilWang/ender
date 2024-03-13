@@ -23,15 +23,15 @@
         --project={{ PROJECT_ID }}
         --region={{ item.zone | regex_replace("-[^-]*$","") }}
       with_items: "{{ vm_instances }}"
-      register: static_ip_results
+      ignore_errors: true
 
     - name: Get static IP addresses
       ansible.builtin.command: >
-        gcloud compute addresses describe ip-{{ item.item.host_name }}
+        gcloud compute addresses describe ip-{{ item.host_name }}
         --project={{ PROJECT_ID }}
-        --region={{ item.item.zone | regex_replace("-[^-]*$","")}}
+        --region={{ item.zone | regex_replace("-[^-]*$","")}}
         --format="get(address)"
-      with_items: "{{ static_ip_results.results }}"
+      with_items: "{{ vm_instances }}"
       register: static_ip_addresses
       changed_when: false
 
