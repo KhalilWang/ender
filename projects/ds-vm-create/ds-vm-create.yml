@@ -1,6 +1,6 @@
 ---
 - name: Create Google Cloud VM
-  hosts: localhost
+  hosts: all
   gather_facts: no
   vars_files:
     - dev_env.yml
