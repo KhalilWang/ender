@@ -8,17 +8,17 @@
 
   tasks:
     - name: Activate service account
-      ansible.builtin.command: gcloud auth activate-service-account --key-file=/path/to/your/service-account-file.json
+      shell: gcloud auth activate-service-account --key-file=/path/to/your/service-account-file.json
 
     - name: List service account
-      ansible.builtin.command: gcloud auth list
+      shell: gcloud auth list
       register: gcloud_auth_list
 
     # - debug:
     #     var: gcloud_auth_list
 
     - name: Create static IP addresses
-      ansible.builtin.command: >
+      shell: >
         gcloud compute addresses create ip-{{ item.host_name }}
         --project={{ PROJECT_ID }}
         --region={{ item.zone | regex_replace("-[^-]*$","") }}
@@ -26,7 +26,7 @@
       failed_when: false
 
     - name: Get static IP addresses
-      ansible.builtin.command: >
+      shell: >
         gcloud compute addresses describe ip-{{ item.host_name }}
         --project={{ PROJECT_ID }}
         --region={{ item.zone | regex_replace("-[^-]*$","")}}
@@ -39,7 +39,7 @@
     #     var: static_ip_addresses
 
     - name: Create VM instances
-      ansible.builtin.command: >
+      shell: >
         gcloud compute instances create {{ item.item.host_name }}
         --project={{ PROJECT_ID }}
         --zone={{ item.item.zone }}
