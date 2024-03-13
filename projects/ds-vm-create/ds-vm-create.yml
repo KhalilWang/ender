@@ -23,7 +23,7 @@
         --project={{ PROJECT_ID }}
         --region={{ item.zone | regex_replace("-[^-]*$","") }}
       with_items: "{{ vm_instances }}"
-      ignore_errors: true
+      failed_when: false
 
     - name: Get static IP addresses
       ansible.builtin.command: >
