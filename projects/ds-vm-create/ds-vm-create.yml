@@ -58,9 +58,9 @@
         --reservation-affinity=any
         --source-machine-image=dsa-template
         --metadata startup-script='#! /bin/bash
-cd /home/tom
-sudo sh create_env.sh
-sudo docker-compose up -d'
+          cd /home/tom
+          sudo sh create_env.sh
+          sudo docker-compose up -d'
       with_items: "{{ static_ip_addresses.results }}"
       register: instance_creation_results
 
