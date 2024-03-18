@@ -43,7 +43,7 @@
         gcloud compute instances create {{ item.item.host_name }}
         --project={{ PROJECT_ID }}
         --zone={{ item.item.zone }}
-        --machine-type=e2-custom-8-16384
+        --machine-type={{ item.item.machine_type }}
         --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default,address={{ item.stdout }}
         --maintenance-policy=MIGRATE
         --provisioning-model=STANDARD
