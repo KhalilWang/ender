@@ -59,7 +59,7 @@
         ansible_python_interpreter: /usr/bin/python3
 
     - name: Log in to Docker Hub
-      ansible.builtin.docker_login:
+      docker_login:
         username: khalilwang
         password: asdqwe!234
 

@@ -8,5 +8,6 @@
   tasks:
     - name: Execute docker-compose down
       command: docker-compose down
+      become: true
       args:
         chdir: "~/"
