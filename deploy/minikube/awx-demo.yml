@@ -2,7 +2,7 @@
 apiVersion: awx.ansible.com/v1beta1                                                                                       
 kind: AWX                                                                                                                 
 metadata:                                                                                                                 
-  name: awx-demo                                                                                                          
+  namespace: awx
+  name: awx
 spec:                                                                                                                     
-  service_type: nodeport                                                                                                  
-  hostname: awx-demo.example.com 
+  service_type: LoadBalancer

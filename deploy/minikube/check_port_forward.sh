@@ -2,7 +2,7 @@
 
 # 检查是否有端口转发进程正在运行
 function check_port_forward() {
-    local pid=$(pgrep -f "kubectl port-forward --address 0.0.0.0 -n awx service/awx-demo-service 8080:80")
+    local pid=$(pgrep -f "kubectl port-forward --address 0.0.0.0 -n awx service/awx-service 8080:80")
     if [ -z "$pid" ]; then
         return 1  # 端口转发进程不存在
     else
@@ -12,7 +12,7 @@ function check_port_forward() {
 
 # 重启端口转发进程
 function restart_port_forward() {
-    nohup kubectl port-forward --address 0.0.0.0 -n awx service/awx-demo-service 8080:80 > port-forward.log 2>&1 &
+    nohup kubectl port-forward --address 0.0.0.0 -n awx service/awx-service 8080:80 > port-forward.log 2>&1 &
     echo $! > port-forward.pid
     echo "Port forward restarted. PID: $(cat port-forward.pid)"
 }

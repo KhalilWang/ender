@@ -21,8 +21,8 @@ minikube start --addons=ingress --cpus=4 --install-addons=true --kubernetes-vers
 
 # 使用 kustomization.yaml 和 awx-demo.yml 搭建 awx
 
-# 完成上述步骤后使用 port-forward 开放端口
-nohup kubectl port-forward --address 0.0.0.0 -n awx service/awx-demo-service 8080:80 &
+# 完成上述步骤后使用 port-forward 开放端口 > 后面可以使用 check_port_forward.sh crontab 的形式开放端口
+nohup kubectl port-forward --address 0.0.0.0 -n awx service/awx-service 8080:80 
 
 # 获取密码
-kubectl get secret awx-demo-admin-password -o jsonpath="{.data.password}" | base64 --decode ; echo
+kubectl get secret awx-admin-password -o jsonpath="{.data.password}" | base64 --decode ; echo
