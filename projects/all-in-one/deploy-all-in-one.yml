@@ -31,13 +31,11 @@
       ansible.builtin.shell:
         cmd: "tar -xz -f ~/m1x.tar.gz -C ~/m1x"
 
-    - name: Download Docker Compose
-      ansible.builtin.get_url:
-        url: "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64"
-        dest: "/usr/local/bin/docker-compose"
-        mode: '0755'
-        force: true
-        validate_certs: true
+    - name: Download and Install Docker Compose
+      become: true
+      shell: |
+        curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
     
     - name: Install docker.io for Debian/Ubuntu
       ansible.builtin.apt:
