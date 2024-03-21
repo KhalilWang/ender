@@ -4,7 +4,8 @@
   gather_facts: no
   vars_files:
     - dev_env.yml
-    - vm_instances.yml
+    # 请参考项目中的 vm_instances.yml 文件
+    # - vm_instances.yml
 
   tasks:
     - name: Activate service account
