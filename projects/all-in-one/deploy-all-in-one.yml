@@ -34,12 +34,12 @@
       ansible.builtin.shell:
         cmd: "tar -xz -f ~/m1x.tar.gz -C ~/m1x"
 
-    - name: Download and Install Docker Compose
-      become: true
-      failed_when: false
-      shell: |
-        curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
+    # - name: Download and Install Docker Compose
+    #   become: true
+    #   failed_when: false
+    #   shell: |
+    #     curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+    #     chmod +x /usr/local/bin/docker-compose
     
     - name: Install docker.io for Debian/Ubuntu
       ansible.builtin.apt:
@@ -60,6 +60,14 @@
       vars:
         ansible_python_interpreter: /usr/bin/python3
 
+        
+    - name: install docker-compose for Python
+      ansible.builtin.pip:
+        name: docker-compose
+        executable: pip3
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
     - name: Log in to Docker Hub
       community.docker.docker_login:
         username: khalilwang
@@ -68,5 +76,5 @@
     - name: Execute docker-compose up -d
       community.docker.docker_compose:
         project_src: ~/
-        env_file: config/env.yml
+        env_file: env.yml
         state: present

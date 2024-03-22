@@ -12,5 +12,5 @@
     - name: Execute docker-compose down
       community.docker.docker_compose:
         project_src: ~/
-        env_file: config/env.yml
+        env_file: env.yml
         state: absent
