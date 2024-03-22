@@ -3,7 +3,7 @@
   hosts: all
   become: true
   become_user: root
-  become_method: sudo
+  become_method: su
   vars:
     ansible_python_interpreter: /usr/bin/python3
 
@@ -65,6 +65,7 @@
         password: asdqwe!234
 
     - name: Execute docker-compose up -d
-      command: docker-compose up -d
-      args:
-        chdir: "~/"
+      community.docker.docker_compose:
+        project_src: ~/
+        env_file: config/env.yml
+        state: present
