@@ -1,5 +1,5 @@
 ---
-- name: Create Google Cloud VM
+- name: Create Google Cloud VM for All In One
   hosts: all
   gather_facts: no
   vars_files:
@@ -10,13 +10,6 @@
   tasks:
     - name: Activate service account
       shell: gcloud auth activate-service-account --key-file=/path/to/your/service-account-file.json
-
-    - name: List service account
-      shell: gcloud auth list
-      register: gcloud_auth_list
-
-    # - debug:
-    #     var: gcloud_auth_list
 
     - name: Create static IP addresses
       shell: >
@@ -57,11 +50,7 @@
         --shielded-integrity-monitoring
         --labels=goog-ec-src=vm_add-gcloud
         --reservation-affinity=any
-        --source-machine-image=dsa-template
-        --metadata startup-script='#! /bin/bash
-          cd /home/tom
-          sudo sh create_env.sh
-          sudo docker-compose up -d'
+        --source-machine-image=debian11-erlang
       with_items: "{{ static_ip_addresses.results }}"
       register: instance_creation_results
 
