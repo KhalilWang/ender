@@ -1,8 +1,11 @@
 - name: config ops agent
   hosts: all
+  become: true
+  become_user: root
+  become_method: su
+  become_exe: sudo su -
   tasks:
     - name: Replace ops agent config
-      become: yes
       copy:
         content: |
           logging:
@@ -25,7 +28,6 @@
         dest: /etc/google-cloud-ops-agent/config.yaml
 
     - name: restart ops agent systemd
-      become: yes
       systemd:
         name: google-cloud-ops-agent   
         state: restarted          

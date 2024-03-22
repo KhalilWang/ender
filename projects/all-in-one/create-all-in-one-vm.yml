@@ -48,7 +48,7 @@
         --no-shielded-secure-boot
         --shielded-vtpm
         --shielded-integrity-monitoring
-        --labels=goog-ec-src=vm_add-gcloud
+        --labels=goog-ops-agent-policy=v2-x86-template-1-2-0,goog-ec-src=vm_add
         --reservation-affinity=any
         --source-machine-image=debian11-erlang
       with_items: "{{ static_ip_addresses.results }}"
