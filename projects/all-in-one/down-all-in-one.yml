@@ -3,7 +3,8 @@
   hosts: all
   become: true
   become_user: root
-  become_method: sudo su -
+  become_method: su
+  become_exe: sudo su -
   vars:
     ansible_python_interpreter: /usr/bin/python3
 
