@@ -10,5 +10,5 @@ tar -xzvf 17.0.0.tar.gz
 pip3 install ansible 
 
 # 去 awx-17.0.0/installer 下修改 inventory 的 admin 密码，然后
-# 修改 inventory 的 python 解释器路径为 venv 中的二进制路径
+# 修改 inventory 的 python 解释器路径为 venv 中的二进制路径，最后执行如下命令
 # ansible-playbook -i inventory install.yml
